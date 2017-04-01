@@ -1,0 +1,48 @@
+{
+  "name": "ALF Student",
+  "version": "0.0.2",
+  "manifest_version": 2,
+  "description": "Get reading estimates on the ALF",
+  "homepage_url": "https://seminar.minerva.kgi.edu/",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "default_locale": "en",
+  "background": {
+    "scripts": [
+      "js/jquery/jquery.js",
+      "js/vendor/readingTime.js",
+      "src/bg/background.js"
+    ],
+    "persistent": false
+  },
+  "browser_action": {
+    "default_icon": "icons/icon16.png",
+    "default_popup": "src/popup/popup.html"
+  },
+  "permissions": [
+    "contentSettings",
+    "contextMenus",
+    "webNavigation",
+    "tabs",
+    "storage",
+    "activeTab",
+    "https://seminar.minerva.kgi.edu/*",
+    "http://*/",
+    "https://*/"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://seminar.minerva.kgi.edu/*"
+      ],
+      "js": [
+        "js/jquery/jquery.js",
+        "js/vendor/readingTime.js",
+        "src/inject/inject.js"
+      ]
+    }
+  ]
+}
