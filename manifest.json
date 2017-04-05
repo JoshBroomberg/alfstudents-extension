@@ -41,7 +41,8 @@
       "js": [
         "js/jquery/jquery.js",
         "js/vendor/readingTime.js",
-        "src/inject/inject.js"
+        "src/inject/estimate.js",
+        "src/inject/modify_visuals.js"
       ]
     }
   ]

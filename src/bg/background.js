@@ -1,18 +1,55 @@
-function runEstimates(){
+// Script Injection
+function injectScript(file) {
   chrome.tabs.executeScript({
     file: 'js/jquery/jquery.js'
   }, function() {
-      chrome.tabs.executeScript({"file": "src/inject/inject.js"});
+      chrome.tabs.executeScript({"file": ("src/inject/" + file)});
   });
 };
 
+function runEstimates(){
+  injectScript("estimate.js");
+};
+
+function runVisualModifications(){
+  injectScript("modify_visuals.js");
+};
+
+function isClassURL(url){
+  var classURLMatcher = "https:\/\/seminar\.minerva\.kgi\.edu\/app\/courses\/[0-9]{1,}\/sections\/[0-9]{1,}\/classes\/[0-9]{1,}"
+  return url.match(classURLMatcher);
+};
+
+function isALFSessionURL(url){
+  var ALFSessionURLMatcher = "https:\/\/seminar\.minerva\.kgi\.edu\/app\/classes\/[0-9]{1,}"
+  return url.match(ALFSessionURLMatcher);
+};
+
 chrome.tabs.onUpdated.addListener(function(id, info, tab){
-  runEstimates();
+  if (isClassURL(tab.url)) {
+    runEstimates();
+  } else if (isALFSessionURL(tab.url)){
+    runVisualModifications();
+  }
 });
 
 chrome.webNavigation.onTabReplaced.addListener(function (details) {
   runEstimates();
 });
+
+// Setting
+var modify_topbar = false;
+
+function updateSettings() {
+  chrome.storage.sync.get({
+    hidetopbar: false
+  }, function(items){
+    modify_topbar = items.hidetopbar;
+  });
+};
+
+updateSettings();
+
 
 chrome.runtime.onMessage.addListener(function(request, sender, callback) {
   if (request.action == "xhttp") {
@@ -23,16 +60,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, callback) {
           callback(xhttp.responseText);
       };
       xhttp.onerror = function() {
-          // Do whatever you want on error. Don't forget to invoke the
-          // callback to clean up the communication port.
-          callback();
+          // Error code.
       };
       xhttp.open(method, request.url, true);
       if (method == 'POST') {
           xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
       }
       xhttp.send(request.data);
-      return true; // prevents the callback from being called too early on return
+      return true;
   }
 
   if (request.action == "reload") {
@@ -40,6 +75,19 @@ chrome.runtime.onMessage.addListener(function(request, sender, callback) {
     setTimeout(function() {
       runEstimates();
     }, 6000);
+  }
+
+  if (request.action == "estimate") {
+    runEstimates();
+  }
+
+  if (request.action == "modifytopbar") {
+    callback({hide_desired: modify_topbar});
+    return true;
+  }
+
+  if (request.action == "updatesettings") {
+    updateSettings();
   }
 });
 
