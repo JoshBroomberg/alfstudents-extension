@@ -101,8 +101,8 @@ function set_times(){
       chrome.runtime.sendMessage({
           method: 'GET',
           action: 'xhttp',
-          url: ("http://localhost:8000/reading/predict?wpm="+ wordsPerMinute +"&article_url=" + encodeURIComponent(urls[urls.length-1])),
-          // url: ("https://alfstudent.herokuapp.com/reading/predict?wpm="+ wordsPerMinute +"&article_url=" + encodeURIComponent(urls[urls.length-1])),
+          // url: ("http://localhost:8000/reading/predict?wpm="+ wordsPerMinute +"&article_url=" + encodeURIComponent(urls[urls.length-1])),
+          url: ("https://alfstudent.herokuapp.com/reading/predict?wpm="+ wordsPerMinute +"&article_url=" + encodeURIComponent(urls[urls.length-1])),
           data: ''
       }, function(responseText) {
           response_dict = JSON.parse(responseText);
