@@ -94,18 +94,33 @@ function set_total(time){
 function set_times(){
   $( ".description" ).find( "p" ).each(function(index){
     var urls = findUrls($(this).text());
-    if (urls.length > 0 && $(this).find("." + index).length === 0){
-      var readingTimeTag = $('<div class="'+index+'">Reading time: </div>');
-      $(this).append(readingTimeTag);
+    if (urls.length > 0 && $(this).find(".time-" + index).length === 0){
+      var readingTimeTag = $('<div class="time-'+index+'" id="reading-'+index+'"></div>');
+      var videoTimeTag = $('<div class="time-'+index+'" id="video-'+index+'"></div>');
+      $(this).append(readingTimeTag, videoTimeTag);
       chrome.runtime.sendMessage({
           method: 'GET',
           action: 'xhttp',
-          // url: ("http://localhost:8000/reading/predict?wpm="+ wordsPerMinute +"&article_url=" + encodeURIComponent(urls[urls.length-1])),
-          url: ("https://alfstudent.herokuapp.com/reading/predict?wpm="+ wordsPerMinute +"&article_url=" + encodeURIComponent(urls[urls.length-1])),
+          url: ("http://localhost:8000/reading/predict?wpm="+ wordsPerMinute +"&article_url=" + encodeURIComponent(urls[urls.length-1])),
+          // url: ("https://alfstudent.herokuapp.com/reading/predict?wpm="+ wordsPerMinute +"&article_url=" + encodeURIComponent(urls[urls.length-1])),
           data: ''
       }, function(responseText) {
-          $("." + index).append(time_string_from_seconds(parseInt(responseText), true));
-          set_total();
+          response_dict = JSON.parse(responseText);
+          if (response_dict.text > 10) {
+            $("#reading-" + index).append("Reading time: "); 
+            $("#reading-" + index).append(time_string_from_seconds(parseInt(response_dict.text), true));
+            set_total();
+          }
+
+          if (response_dict.video > 10) {
+            $("#video-" + index).append("Video time: "); 
+            $("#video-" + index).append(time_string_from_seconds(parseInt(response_dict.video), true));
+            set_total();
+          }
+
+          if (response_dict.video <= 10 && response_dict.text <= 10) {
+            $("#reading-" + index).append("Reading time: unavailable"); 
+          }
       });
     }
   });
