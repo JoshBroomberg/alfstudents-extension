@@ -39,7 +39,7 @@ function restore_options() {
   // Use default value color = 'red' and likesColor = true.
   chrome.storage.sync.get({
     wpm: '300',
-    hidetopbar: true
+    hidetopbar: false
   }, function(items) {
     document.getElementById('wordspermin').value = items.wpm;
     document.getElementById('hidetopbar').checked = items.hidetopbar;

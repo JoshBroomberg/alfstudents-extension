@@ -1,3 +1,6 @@
+var host = "http://localhost:8000"; 
+// var host = "https://alfstudent.herokuapp.com";
+
 function findUrls(text)
 {
     var source = (text || '').toString();
@@ -18,6 +21,20 @@ function findUrls(text)
     })
 
     return uniqueUrls;
+}
+
+function sendRating(article_url, rating, rating_div){
+  chrome.runtime.sendMessage({
+    method: 'GET',
+    action: 'xhttp',
+    url: host + "/reading/rate",
+    data: JSON.stringify({
+      "rating": rating,
+      "article_url": encodeURIComponent(article_url)
+    })
+  }, function(responseText) {
+      rating_div.text("Rated: " + JSON.parse(responseText).rating);
+  });
 }
 
 var round = false;
@@ -95,15 +112,22 @@ function set_times(){
   $( ".description" ).find( "p" ).each(function(index){
     var urls = findUrls($(this).text());
     if (urls.length > 0 && $(this).find(".time-" + index).length === 0){
+      var reading_url = urls[urls.length-1];
       var readingTimeTag = $('<div class="time-'+index+'" id="reading-'+index+'"></div>');
       var videoTimeTag = $('<div class="time-'+index+'" id="video-'+index+'"></div>');
-      $(this).append(readingTimeTag, videoTimeTag);
+
+      var ratingTag = $('<div class="rating-'+index+'" data-url="'+ reading_url +'">Rate: <a class="short-rating" id="short-rating-'+index+'" href="#">Too short</a>/<a class="long-rating" id="long-rating-'+index+'" href="#">Too long</a></div>');
+      $(this).append(readingTimeTag, videoTimeTag, ratingTag);
+      $(this).prepend("<input type='checkbox'></input>");
+
       chrome.runtime.sendMessage({
-          method: 'GET',
-          action: 'xhttp',
-          // url: ("http://localhost:8000/reading/predict?wpm="+ wordsPerMinute +"&article_url=" + encodeURIComponent(urls[urls.length-1])),
-          url: ("https://alfstudent.herokuapp.com/reading/predict?wpm="+ wordsPerMinute +"&article_url=" + encodeURIComponent(urls[urls.length-1])),
-          data: ''
+        method: 'GET',
+        action: 'xhttp',
+        url: host + "/reading/predict",
+        data: JSON.stringify({
+          "wpm": wordsPerMinute,
+          "article_url": encodeURIComponent(reading_url)
+        })
       }, function(responseText) {
           response_dict = JSON.parse(responseText);
           if (response_dict.text > 10) {
@@ -132,4 +156,19 @@ chrome.storage.sync.get({
   }, function(items) {
     wordsPerMinute = parseInt(items.wpm);
     set_times();
+});
+
+// $(".short-rating").each(function(){$(this).preventDefault()});
+// $(".long-rating").each(function(){$(this).preventDefault()});
+
+$(".short-rating").click(function($e){
+  var article_url = $(this).parent().attr('data-url');
+  sendRating(article_url, 1, $(this).parent());
+  return false;
+});
+
+$(".long-rating").click(function($e){
+  var article_url = $(this).parent().attr('data-url');
+  sendRating(article_url, 2, $(this).parent());
+  return false;
 });

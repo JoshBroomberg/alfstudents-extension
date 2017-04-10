@@ -1,3 +1,6 @@
+var modify_topbar = false;
+var current_tab = null;
+
 // Script Injection
 function injectScript(file) {
   chrome.tabs.executeScript({
@@ -26,6 +29,7 @@ function isALFSessionURL(url){
 };
 
 chrome.tabs.onUpdated.addListener(function(id, info, tab){
+  current_tab = tab.url;
   if (isClassURL(tab.url)) {
     runEstimates();
   } else if (isALFSessionURL(tab.url)){
@@ -36,9 +40,6 @@ chrome.tabs.onUpdated.addListener(function(id, info, tab){
 chrome.webNavigation.onTabReplaced.addListener(function (details) {
   runEstimates();
 });
-
-// Setting
-var modify_topbar = false;
 
 function updateSettings() {
   chrome.storage.sync.get({
@@ -55,18 +56,27 @@ chrome.runtime.onMessage.addListener(function(request, sender, callback) {
   if (request.action == "xhttp") {
       var xhttp = new XMLHttpRequest();
       var method = request.method ? request.method.toUpperCase() : 'GET';
+      var request_url = request.url;
+      
+      if (request.data) {
+        var param_data = JSON.parse(request.data);
+        request_url = request_url + "?";
+        
+        for (var query_param in param_data) {
+          request_url = request_url + (query_param + "=" + param_data[query_param]) + "&";
+        }
+        request_url = request_url + "src_url=" + encodeURIComponent(current_tab);
+      }
 
       xhttp.onload = function() {
           callback(xhttp.responseText);
       };
       xhttp.onerror = function() {
-          // Error code.
+          console.log("HTTP Error occured");
       };
-      xhttp.open(method, request.url, true);
-      if (method == 'POST') {
-          xhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-      }
-      xhttp.send(request.data);
+
+      xhttp.open(method, request_url, true);
+      xhttp.send();
       return true;
   }
 
